@@ -40,7 +40,7 @@ let startButton;
 let operationButtons = {};
 
 // Title and Subtitle
-let title = "Lodhia Snake Math";
+let title = "Lodhia Snake Math CHOICE";
 let subtitle = "Use arrow keys or WASD to play and press Esc to pause";
 
 // Labels
