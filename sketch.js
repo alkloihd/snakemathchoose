@@ -43,10 +43,8 @@ let operationButtons = {};
 let title = "Lodhia Snake Math";
 let subtitle = "Use arrow keys or WASD to play and press Esc to pause";
 
-// Game Speed Label
-let speedLabel = "Game Speed";
-
-// Operations Label
+// Labels
+let speedLabel = "Select Game Speed";
 let operationsLabel = "Select Operations";
 
 let canvas; // Declare canvas globally
@@ -160,10 +158,10 @@ function createWelcomeScreen() {
 
     for (let i = 1; i <= 5; i++) {
         let btn = createButton(i.toString());
-        btn.position(start_x + (i - 1) * 80 + canvasX, 180 + canvasY); // Adjusted position
+        btn.position(start_x + (i - 1) * 80 + canvasX, 280 + canvasY); // Shifted down by 200 pixels
         btn.size(60, 60);
         btn.style('font-size', '20px');
-        btn.style('background-color', '#FFF');
+        btn.style('background-color', selected_speed === i ? '#00BFFF' : '#FFF'); // Highlight selected speed
         btn.style('border', '2px solid #000');
         btn.mousePressed(() => selectSpeed(i));
         speedButtons.push(btn);
@@ -175,10 +173,10 @@ function createWelcomeScreen() {
 
     operations.forEach((op, index) => {
         let btn = createButton(op);
-        btn.position(ops_start_x + index * 80 + canvasX, 260 + canvasY); // Adjusted position
+        btn.position(ops_start_x + index * 80 + canvasX, 360 + canvasY); // Shifted down by 200 pixels
         btn.size(60, 60);
         btn.style('font-size', '24px');
-        btn.style('background-color', '#AAF'); // Selected by default
+        btn.style('background-color', '#00BFFF'); // Selected by default (blue)
         btn.style('border', '2px solid #000');
         btn.mousePressed(() => toggleOperation(op));
         operationButtons[op] = btn;
@@ -186,7 +184,7 @@ function createWelcomeScreen() {
 
     // Create Start Button
     startButton = createButton('Start Game');
-    startButton.position(width / 2 - 100 + canvasX, 340 + canvasY); // Adjusted position
+    startButton.position(width / 2 - 100 + canvasX, 440 + canvasY); // Shifted down by 200 pixels
     startButton.size(200, 60);
     startButton.style('font-size', '24px');
     startButton.style('background-color', '#FFF');
@@ -200,9 +198,9 @@ function selectSpeed(speed) {
     // Highlight selected button
     speedButtons.forEach((btn, index) => {
         if (index + 1 === speed) {
-            btn.style('background-color', '#AAF'); // Highlight color
+            btn.style('background-color', '#00BFFF'); // Highlight color (blue)
         } else {
-            btn.style('background-color', '#FFF'); // Default color
+            btn.style('background-color', '#FFF'); // Default color (white)
         }
     });
 }
@@ -211,16 +209,16 @@ function toggleOperation(op) {
     if (selected_operations.includes(op)) {
         // Deselect operation
         selected_operations.splice(selected_operations.indexOf(op), 1);
-        operationButtons[op].style('background-color', '#FFF');
+        operationButtons[op].style('background-color', '#FFF'); // White when deselected
     } else {
         // Select operation
         selected_operations.push(op);
-        operationButtons[op].style('background-color', '#AAF');
+        operationButtons[op].style('background-color', '#00BFFF'); // Blue when selected
     }
     // Ensure at least one operation is selected
     if (selected_operations.length === 0) {
         selected_operations.push(op);
-        operationButtons[op].style('background-color', '#AAF');
+        operationButtons[op].style('background-color', '#00BFFF');
     }
 }
 
@@ -243,6 +241,9 @@ function initSnake() {
 
 function generateMathProblem() {
     let operations = selected_operations.slice();
+    if (operations.length === 0) {
+        operations = ['+', '-', '*', '/']; // Default to all if none selected
+    }
     let operation = random(operations);
     let a, b, question, answer;
 
@@ -584,11 +585,11 @@ function drawWelcomeScreen() {
 
     // Draw Game Speed Label
     textSize(24);
-    text(speedLabel, width / 2, 160); // y-position set to 160px
+    text(speedLabel, width / 2, 240); // y-position shifted down by 200 pixels
 
     // Draw Operations Label
     textSize(24);
-    text(operationsLabel, width / 2, 240); // y-position set to 240px
+    text(operationsLabel, width / 2, 320); // y-position shifted down by 200 pixels
 
     // Buttons are already created and positioned
 }
@@ -643,6 +644,7 @@ function resetGame() {
     score_total = 0;
     level = 1;
     correct_answers_in_level = 0;
+    selected_operations = ['+', '-', '*', '/'];
     game_state = 'RUNNING';
     x_marks = [];
     check_marks = [];
