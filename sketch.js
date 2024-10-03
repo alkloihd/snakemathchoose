@@ -158,7 +158,7 @@ function createWelcomeScreen() {
 
     for (let i = 1; i <= 5; i++) {
         let btn = createButton(i.toString());
-        btn.position(start_x + (i - 1) * 80 + canvasX, 280 + canvasY); // Shifted down by 200 pixels
+        btn.position(start_x + (i - 1) * 80 + canvasX, 180 + canvasY); // Moved up by 100 pixels
         btn.size(60, 60);
         btn.style('font-size', '20px');
         btn.style('background-color', selected_speed === i ? '#00BFFF' : '#FFF'); // Highlight selected speed
@@ -173,18 +173,21 @@ function createWelcomeScreen() {
 
     operations.forEach((op, index) => {
         let btn = createButton(op);
-        btn.position(ops_start_x + index * 80 + canvasX, 360 + canvasY); // Shifted down by 200 pixels
+        btn.position(ops_start_x + index * 80 + canvasX, 300 + canvasY); // Moved up by 100 pixels
         btn.size(60, 60);
         btn.style('font-size', '24px');
-        btn.style('background-color', '#00BFFF'); // Selected by default (blue)
+        btn.style('background-color', '#FFF'); // Start as white (deselected)
         btn.style('border', '2px solid #000');
         btn.mousePressed(() => toggleOperation(op));
         operationButtons[op] = btn;
     });
 
+    // By default, no operations are selected; force user to select
+    selected_operations = [];
+
     // Create Start Button
     startButton = createButton('Start Game');
-    startButton.position(width / 2 - 100 + canvasX, 440 + canvasY); // Shifted down by 200 pixels
+    startButton.position(width / 2 - 100 + canvasX, 420 + canvasY); // Moved up by 100 pixels
     startButton.size(200, 60);
     startButton.style('font-size', '24px');
     startButton.style('background-color', '#FFF');
@@ -215,14 +218,14 @@ function toggleOperation(op) {
         selected_operations.push(op);
         operationButtons[op].style('background-color', '#00BFFF'); // Blue when selected
     }
-    // Ensure at least one operation is selected
-    if (selected_operations.length === 0) {
-        selected_operations.push(op);
-        operationButtons[op].style('background-color', '#00BFFF');
-    }
+    // Ensure at least one operation is selected before starting the game
 }
 
 function startGame() {
+    if (selected_operations.length === 0) {
+        alert("Please select at least one operation to start the game.");
+        return;
+    }
     game_state = 'RUNNING';
     // Hide buttons
     speedButtons.forEach(btn => btn.hide());
@@ -248,7 +251,8 @@ function generateMathProblem() {
     let a, b, question, answer;
 
     // Define max number based on level
-    let max_number = 2 + level; // Increases with each level
+    let max_number = 2 + level * 2; // Increases with each level
+    let min_number = 2 + floor(level / 2); // Increase minimum number to make it harder
     let max_result = max_number * max_number;
 
     // Ensure operands are greater than zero
@@ -258,13 +262,13 @@ function generateMathProblem() {
                 a = floor(random(1, max_number + 1));
                 b = 1; // Adding 1 at level 1
             } else {
-                a = floor(random(2, max_number + 1));
-                b = floor(random(2, max_number + 1));
+                a = floor(random(min_number, max_number + 1));
+                b = floor(random(min_number, max_number + 1));
             }
             // Make sure sum does not exceed max_result
             while (a + b > max_result) {
-                a = floor(random(2, max_number + 1));
-                b = floor(random(2, max_number + 1));
+                a = floor(random(min_number, max_number + 1));
+                b = floor(random(min_number, max_number + 1));
             }
             question = `${a} + ${b}`;
             answer = a + b;
@@ -274,21 +278,21 @@ function generateMathProblem() {
                 a = floor(random(2, max_result + 1));
                 b = 1; // Subtracting 1 at level 1
             } else {
-                a = floor(random(2, max_result + 1));
-                b = floor(random(2, a)); // Ensure result is positive
+                b = floor(random(min_number, max_number + 1));
+                a = floor(random(b, max_result + 1)); // Ensure a >= b
             }
             question = `${a} - ${b}`;
             answer = a - b;
             break;
         case '*':
-            a = floor(random(2, max_number + 1));
-            b = floor(random(2, max_number + 1));
+            a = floor(random(min_number, max_number + 1));
+            b = floor(random(min_number, max_number + 1));
             question = `${a} × ${b}`;
             answer = a * b;
             break;
         case '/':
-            b = floor(random(2, max_number + 1));
-            answer = floor(random(2, max_number + 1));
+            b = floor(random(min_number, max_number + 1));
+            answer = floor(random(min_number, max_number + 1));
             a = b * answer;
             question = `${a} ÷ ${b}`;
             break;
@@ -299,8 +303,9 @@ function generateMathProblem() {
 
 function generateIncorrectAnswers(correct_answer, count = 3) {
     let incorrect = new Set();
+    let range = Math.max(10, Math.floor(correct_answer / 2));
     while (incorrect.size < count) {
-        let delta = floor(random(-10, 11));
+        let delta = floor(random(-range, range + 1));
         let wrong = correct_answer + delta;
         if (wrong !== correct_answer && wrong > 0) {
             incorrect.add(wrong);
@@ -364,14 +369,7 @@ function moveSnake() {
     head.x = (head.x + GRID_WIDTH) % GRID_WIDTH;
     head.y = (head.y + GRID_HEIGHT) % GRID_HEIGHT;
 
-    // Check for self-collision
-    for (let i = 0; i < snake.length; i++) {
-        if (head.x === snake[i].x && head.y === snake[i].y) {
-            lives = 0;
-            game_state = 'GAME_OVER';
-            return;
-        }
-    }
+    // Do not check for self-collision
 
     snake.unshift(head);
     snake.pop();
@@ -585,11 +583,11 @@ function drawWelcomeScreen() {
 
     // Draw Game Speed Label
     textSize(24);
-    text(speedLabel, width / 2, 240); // y-position shifted down by 200 pixels
+    text(speedLabel, width / 2, 160); // Moved up by 100 pixels
 
     // Draw Operations Label
     textSize(24);
-    text(operationsLabel, width / 2, 320); // y-position shifted down by 200 pixels
+    text(operationsLabel, width / 2, 280); // Moved up by 100 pixels
 
     // Buttons are already created and positioned
 }
